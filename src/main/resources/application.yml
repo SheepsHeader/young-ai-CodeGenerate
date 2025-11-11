@@ -1,6 +1,11 @@
 spring:
   application:
     name: young-ai-CodeGenerate
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/yang_ai_code_generator?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: root
+    password: 1234
 server:
   port: 8123
   servlet:
