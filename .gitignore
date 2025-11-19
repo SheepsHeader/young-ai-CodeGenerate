@@ -1,3 +1,9 @@
+### CUSTOM ###
+application-local.yml
+tmp
+yu-ai-code-frontend
+young-ai-vue
+
 HELP.md
 target/
 .mvn/wrapper/maven-wrapper.jar

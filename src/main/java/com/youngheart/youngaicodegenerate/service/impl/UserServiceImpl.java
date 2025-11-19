@@ -111,6 +111,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>  implements U
         if (user == null){
             throw new BusinessException(ErrorCode.PARAMS_ERROR,"账号或密码错误");
         }
+        //通过session保存用户信息
         request.getSession().setAttribute(USER_LOGIN_STATE, user);
         return getLoginUserVO(user);
     }
