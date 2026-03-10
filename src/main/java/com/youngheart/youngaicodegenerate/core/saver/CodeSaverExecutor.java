@@ -17,7 +17,7 @@ public class CodeSaverExecutor {
       * @param  result:代码生成结果
       * @return 保存的文件对象
       */
-    public static File saveCode(Object result, CodeGenTypeEnum codeGenType) throws BusinessException {
+    public static File executorSaver(Object result, CodeGenTypeEnum codeGenType) throws BusinessException {
         return switch (codeGenType) {
             case HTML -> htmlCodeSaver.saveCode((HtmlCodeResult) result);
             case MULTI_FILE -> multiCodeSaver.saveCode((MultiCodeResult) result);

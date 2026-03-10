@@ -1,7 +1,5 @@
 package com.youngheart.youngaicodegenerate.core.parser;
 
-import com.youngheart.youngaicodegenerate.ai.model.HtmlCodeResult;
-import com.youngheart.youngaicodegenerate.ai.model.MultiCodeResult;
 import com.youngheart.youngaicodegenerate.model.enums.CodeGenTypeEnum;
 
 public class CodeParserExecutor {
@@ -16,7 +14,7 @@ public class CodeParserExecutor {
      * @param codeGenTypeEnum
      * @return 解析后的代码
      */
-    public static Object parseCode(String content, CodeGenTypeEnum codeGenTypeEnum) {
+    public static Object executorParser(String content, CodeGenTypeEnum codeGenTypeEnum) {
         switch (codeGenTypeEnum) {
             case HTML:
                 return htmlCodeParser.parseCode(content);

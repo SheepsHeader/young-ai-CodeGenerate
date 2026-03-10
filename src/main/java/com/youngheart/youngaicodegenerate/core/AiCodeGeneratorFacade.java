@@ -73,8 +73,8 @@ public class AiCodeGeneratorFacade {
                 .doOnComplete(()->{
                     try {
                         String multiCode = stringBuilder.toString();
-                        Object multiCodeResult = CodeParserExecutor.parseCode(multiCode, CodeGenTypeEnum.MULTI_FILE);
-                        File file = CodeSaverExecutor.saveCode(multiCodeResult, CodeGenTypeEnum.MULTI_FILE);
+                        Object multiCodeResult = CodeParserExecutor.executorParser(multiCode, CodeGenTypeEnum.MULTI_FILE);
+                        File file = CodeSaverExecutor.executorSaver(multiCodeResult, CodeGenTypeEnum.MULTI_FILE);
                         log.info("多文件代码流保存成功，目录：{}", file.getAbsolutePath());
                     } catch (Exception e) {
                         log.error("生成多文件代码流时出错:{}", e.getMessage());
@@ -89,8 +89,8 @@ public class AiCodeGeneratorFacade {
                 .doOnComplete(()->{
                     try {
                         String html = htmlCodeBuilder.toString();
-                        Object htmlCodeResult = CodeParserExecutor.parseCode(html, CodeGenTypeEnum.HTML);
-                        File file = CodeSaverExecutor.saveCode(htmlCodeResult, CodeGenTypeEnum.HTML);
+                        Object htmlCodeResult = CodeParserExecutor.executorParser(html, CodeGenTypeEnum.HTML);
+                        File file = CodeSaverExecutor.executorSaver(htmlCodeResult, CodeGenTypeEnum.HTML);
                         log.info("HTML 代码流保存成功，目录：{}", file.getAbsolutePath());
                     } catch (Exception e) {
                         log.error("生成 HTML 代码流时出错:{}", e.getMessage());
