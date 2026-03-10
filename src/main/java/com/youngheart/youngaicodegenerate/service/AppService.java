@@ -8,6 +8,7 @@ import com.youngheart.youngaicodegenerate.model.entity.App;
 import com.youngheart.youngaicodegenerate.model.entity.User;
 import com.youngheart.youngaicodegenerate.model.vo.AppVO;
 import com.youngheart.youngaicodegenerate.model.vo.UserVO;
+import reactor.core.publisher.Flux;
 
 import java.util.List;
 
@@ -24,4 +25,6 @@ public interface AppService extends IService<App> {
     QueryWrapper getQueryWrapper(AppQueryRequest appQueryRequest);
 
     List<AppVO> getAppVOList(List<App> appList);
+
+    Flux<String> chatToGenCode(Long appId, String message, User loginUser);
 }

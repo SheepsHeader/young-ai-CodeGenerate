@@ -22,11 +22,11 @@ public abstract class CodeSaverTemplate<T> {
      * @param result
      * @return
      */
-    protected final File saveCode(T result){
+    protected final File saveCode(T result,Long appId){
         //1.校验result是否为空
         verifyResult(result);
         // 2.创建目录
-        String dirPath = buildUniqueDir();
+        String dirPath = buildUniqueDir(appId);
         //3. 保存文件
         saveFile(result,dirPath);
         //4.返回文件对象
@@ -49,9 +49,9 @@ public abstract class CodeSaverTemplate<T> {
     /**
      * 构建唯一目录路径：tmp/code_output/bizType_雪花ID
      */
-    protected String buildUniqueDir() {
+    protected String buildUniqueDir(Long appId) {
         String bizType = getCodeType().getValue();
-        String uniqueDirName = StrUtil.format("{}_{}", bizType, IdUtil.getSnowflakeNextIdStr());
+        String uniqueDirName = StrUtil.format("{}_{}", bizType, appId);
         String dirPath = FILE_SAVE_ROOT_DIR + File.separator + uniqueDirName;
         FileUtil.mkdir(dirPath);
         return dirPath;
