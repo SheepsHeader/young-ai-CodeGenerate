@@ -3,6 +3,8 @@ package com.youngheart.youngaicodegenerate.core;
 import com.youngheart.youngaicodegenerate.ai.AiCodeGeneratorService;
 import com.youngheart.youngaicodegenerate.ai.model.HtmlCodeResult;
 import com.youngheart.youngaicodegenerate.ai.model.MultiCodeResult;
+import com.youngheart.youngaicodegenerate.core.parser.CodeParserExecutor;
+import com.youngheart.youngaicodegenerate.core.saver.CodeSaverExecutor;
 import com.youngheart.youngaicodegenerate.exception.BusinessException;
 import com.youngheart.youngaicodegenerate.exception.ErrorCode;
 import com.youngheart.youngaicodegenerate.model.enums.CodeGenTypeEnum;
@@ -71,10 +73,11 @@ public class AiCodeGeneratorFacade {
                 .doOnComplete(()->{
                     try {
                         String multiCode = stringBuilder.toString();
-                        MultiCodeResult multiCodeResult = CodeParser.parseMultiFileCode(multiCode);
-                        CodeFileSaver.saveMultiFileCodeResult(multiCodeResult);
+                        Object multiCodeResult = CodeParserExecutor.parseCode(multiCode, CodeGenTypeEnum.MULTI_FILE);
+                        File file = CodeSaverExecutor.saveCode(multiCodeResult, CodeGenTypeEnum.MULTI_FILE);
+                        log.info("多文件代码流保存成功，目录：{}", file.getAbsolutePath());
                     } catch (Exception e) {
-                        log.error("生成多文件代码流时出错", e);
+                        log.error("生成多文件代码流时出错:{}", e.getMessage());
                     }
                 });
     }
@@ -86,10 +89,11 @@ public class AiCodeGeneratorFacade {
                 .doOnComplete(()->{
                     try {
                         String html = htmlCodeBuilder.toString();
-                        HtmlCodeResult htmlCodeResult = CodeParser.parseHtmlCode(html);
-                        CodeFileSaver.saveHtmlCodeResult(htmlCodeResult);
+                        Object htmlCodeResult = CodeParserExecutor.parseCode(html, CodeGenTypeEnum.HTML);
+                        File file = CodeSaverExecutor.saveCode(htmlCodeResult, CodeGenTypeEnum.HTML);
+                        log.info("HTML 代码流保存成功，目录：{}", file.getAbsolutePath());
                     } catch (Exception e) {
-                        log.error("生成 HTML 代码流时出错", e);
+                        log.error("生成 HTML 代码流时出错:{}", e.getMessage());
                     }
                 });
     }
