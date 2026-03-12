@@ -3,6 +3,7 @@ package com.youngheart.youngaicodegenerate.core.saver;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.StrUtil;
+import com.youngheart.youngaicodegenerate.constant.AppConstant;
 import com.youngheart.youngaicodegenerate.exception.BusinessException;
 import com.youngheart.youngaicodegenerate.exception.ErrorCode;
 import com.youngheart.youngaicodegenerate.model.enums.CodeGenTypeEnum;
@@ -15,7 +16,7 @@ import java.io.File;
  */
 public abstract class CodeSaverTemplate<T> {
 
-    protected static final String FILE_SAVE_ROOT_DIR = System.getProperty("user.dir") + "/tmp/code_output";
+    protected static final String FILE_SAVE_ROOT_DIR = AppConstant.CODE_OUTPUT_ROOT_DIR;
 
     /**
      * 保存代码:定义保存逻辑步骤
