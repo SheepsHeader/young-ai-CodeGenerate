@@ -1,6 +1,7 @@
 package com.youngheart.youngaicodegenerate.core;
 
 import com.youngheart.youngaicodegenerate.ai.AiCodeGeneratorService;
+import com.youngheart.youngaicodegenerate.ai.AiCodeGeneratorServiceFactory;
 import com.youngheart.youngaicodegenerate.ai.model.HtmlCodeResult;
 import com.youngheart.youngaicodegenerate.ai.model.MultiCodeResult;
 import com.youngheart.youngaicodegenerate.core.parser.CodeParserExecutor;
@@ -23,8 +24,11 @@ import java.io.File;
 public class AiCodeGeneratorFacade {
 
     private static final Logger log = LoggerFactory.getLogger(AiCodeGeneratorFacade.class);
+
     @Resource
-    private AiCodeGeneratorService aiCodeGeneratorService;
+    private AiCodeGeneratorServiceFactory aiCodeGeneratorServiceFactory;
+
+
 
     /**
      * 统一入口：根据类型生成并保存代码
@@ -67,6 +71,8 @@ public class AiCodeGeneratorFacade {
     }
 
     private Flux<String> generateAndSaveMultiFileCodeStream(String userMessage,Long appId) {
+        // 根据 appId 获取对应的 AI 服务实例
+        AiCodeGeneratorService aiCodeGeneratorService = aiCodeGeneratorServiceFactory.getAiCodeGeneratorService(appId);
         Flux<String> result = aiCodeGeneratorService.generatorMultiCodeStreaming(userMessage);
         StringBuilder stringBuilder = new StringBuilder();
         return result.doOnNext(chunk->stringBuilder.append(chunk))
@@ -83,6 +89,8 @@ public class AiCodeGeneratorFacade {
     }
 
     private  Flux<String> generateAndSaveHtmlCodeStream(String userMessage,Long appId) {
+        // 根据 appId 获取对应的 AI 服务实例
+        AiCodeGeneratorService aiCodeGeneratorService = aiCodeGeneratorServiceFactory.getAiCodeGeneratorService(appId);
         Flux<String> result = aiCodeGeneratorService.generatorHtmlCodeStreaming(userMessage);
         StringBuilder htmlCodeBuilder = new StringBuilder();
         return result.doOnNext(htmlCodeBuilder::append)
@@ -105,6 +113,8 @@ public class AiCodeGeneratorFacade {
      * @return 保存的目录
      */
     private File generateAndSaveHtmlCode(String userMessage,Long appId) {
+        // 根据 appId 获取对应的 AI 服务实例
+        AiCodeGeneratorService aiCodeGeneratorService = aiCodeGeneratorServiceFactory.getAiCodeGeneratorService(appId);
         HtmlCodeResult result = aiCodeGeneratorService.generatorHtmlCode(userMessage);
         return CodeSaverExecutor.executorSaver(result, CodeGenTypeEnum.HTML,appId);
     }
@@ -116,6 +126,8 @@ public class AiCodeGeneratorFacade {
      * @return 保存的目录
      */
     private File generateAndSaveMultiFileCode(String userMessage,Long appId) {
+        // 根据 appId 获取对应的 AI 服务实例
+        AiCodeGeneratorService aiCodeGeneratorService = aiCodeGeneratorServiceFactory.getAiCodeGeneratorService(appId);
         MultiCodeResult result = aiCodeGeneratorService.generatorMultiCode(userMessage);
         return CodeSaverExecutor.executorSaver(result, CodeGenTypeEnum.MULTI_FILE,appId);
     }
