@@ -42,6 +42,7 @@ public class AiCodeGeneratorFacade {
             throw new BusinessException(ErrorCode.SYSTEM_ERROR, "生成类型为空");
         }
         return switch (codeGenTypeEnum) {
+//            case VUE_PROJECT -> generateAndSaveVueProjectCode(userMessage,appId);
             case HTML -> generateAndSaveHtmlCode(userMessage,appId);
             case MULTI_FILE -> generateAndSaveMultiFileCode(userMessage,appId);
             default -> {
@@ -49,7 +50,9 @@ public class AiCodeGeneratorFacade {
                 throw new BusinessException(ErrorCode.SYSTEM_ERROR, errorMessage);
             }
         };
-    }/**
+    }
+
+    /**
      * 统一入口：根据类型生成并保存代码(流式输出)
      *
      * @param userMessage     用户提示词
@@ -61,6 +64,7 @@ public class AiCodeGeneratorFacade {
             throw new BusinessException(ErrorCode.SYSTEM_ERROR, "生成类型为空");
         }
         return switch (codeGenTypeEnum) {
+            case VUE_PROJECT -> generateAndSaveVueProjectCodeStream(userMessage,appId);
             case HTML -> generateAndSaveHtmlCodeStream(userMessage,appId);
             case MULTI_FILE -> generateAndSaveMultiFileCodeStream(userMessage,appId);
             default -> {
@@ -70,9 +74,28 @@ public class AiCodeGeneratorFacade {
         };
     }
 
+    private Flux<String> generateAndSaveVueProjectCodeStream(String userMessage, Long appId) {
+        // 根据 appId 获取对应的 AI 服务实例
+        AiCodeGeneratorService aiCodeGeneratorService = aiCodeGeneratorServiceFactory.getAiCodeGeneratorService(appId, CodeGenTypeEnum.VUE_PROJECT);
+        Flux<String> result = aiCodeGeneratorService.generateVueProjectCodeStream(appId, userMessage);
+        StringBuilder stringBuilder = new StringBuilder();
+        return result.doOnNext(stringBuilder::append)
+                .doOnComplete(()->{
+                    try {
+                        String multiCode = stringBuilder.toString();
+                        Object multiCodeResult = CodeParserExecutor.executorParser(multiCode, CodeGenTypeEnum.MULTI_FILE);
+                        File file = CodeSaverExecutor.executorSaver(multiCodeResult, CodeGenTypeEnum.MULTI_FILE,appId);
+                        log.info("多文件代码流保存成功，目录：{}", file.getAbsolutePath());
+                    } catch (Exception e) {
+                        log.error("生成多文件代码流时出错:{}", e.getMessage());
+                    }
+                });
+
+    }
+
     private Flux<String> generateAndSaveMultiFileCodeStream(String userMessage,Long appId) {
         // 根据 appId 获取对应的 AI 服务实例
-        AiCodeGeneratorService aiCodeGeneratorService = aiCodeGeneratorServiceFactory.getAiCodeGeneratorService(appId);
+        AiCodeGeneratorService aiCodeGeneratorService = aiCodeGeneratorServiceFactory.getAiCodeGeneratorService(appId, CodeGenTypeEnum.MULTI_FILE);
         Flux<String> result = aiCodeGeneratorService.generatorMultiCodeStreaming(userMessage);
         StringBuilder stringBuilder = new StringBuilder();
         return result.doOnNext(chunk->stringBuilder.append(chunk))
@@ -90,7 +113,7 @@ public class AiCodeGeneratorFacade {
 
     private  Flux<String> generateAndSaveHtmlCodeStream(String userMessage,Long appId) {
         // 根据 appId 获取对应的 AI 服务实例
-        AiCodeGeneratorService aiCodeGeneratorService = aiCodeGeneratorServiceFactory.getAiCodeGeneratorService(appId);
+        AiCodeGeneratorService aiCodeGeneratorService = aiCodeGeneratorServiceFactory.getAiCodeGeneratorService(appId, CodeGenTypeEnum.HTML);
         Flux<String> result = aiCodeGeneratorService.generatorHtmlCodeStreaming(userMessage);
         StringBuilder htmlCodeBuilder = new StringBuilder();
         return result.doOnNext(htmlCodeBuilder::append)
@@ -114,7 +137,7 @@ public class AiCodeGeneratorFacade {
      */
     private File generateAndSaveHtmlCode(String userMessage,Long appId) {
         // 根据 appId 获取对应的 AI 服务实例
-        AiCodeGeneratorService aiCodeGeneratorService = aiCodeGeneratorServiceFactory.getAiCodeGeneratorService(appId);
+        AiCodeGeneratorService aiCodeGeneratorService = aiCodeGeneratorServiceFactory.getAiCodeGeneratorService(appId, CodeGenTypeEnum.HTML);
         HtmlCodeResult result = aiCodeGeneratorService.generatorHtmlCode(userMessage);
         return CodeSaverExecutor.executorSaver(result, CodeGenTypeEnum.HTML,appId);
     }
@@ -127,7 +150,7 @@ public class AiCodeGeneratorFacade {
      */
     private File generateAndSaveMultiFileCode(String userMessage,Long appId) {
         // 根据 appId 获取对应的 AI 服务实例
-        AiCodeGeneratorService aiCodeGeneratorService = aiCodeGeneratorServiceFactory.getAiCodeGeneratorService(appId);
+        AiCodeGeneratorService aiCodeGeneratorService = aiCodeGeneratorServiceFactory.getAiCodeGeneratorService(appId, CodeGenTypeEnum.MULTI_FILE);
         MultiCodeResult result = aiCodeGeneratorService.generatorMultiCode(userMessage);
         return CodeSaverExecutor.executorSaver(result, CodeGenTypeEnum.MULTI_FILE,appId);
     }
