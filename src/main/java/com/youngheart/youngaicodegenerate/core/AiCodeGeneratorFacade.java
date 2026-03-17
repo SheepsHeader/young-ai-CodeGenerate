@@ -1,7 +1,11 @@
 package com.youngheart.youngaicodegenerate.core;
 
+import cn.hutool.json.JSONUtil;
 import com.youngheart.youngaicodegenerate.ai.AiCodeGeneratorService;
 import com.youngheart.youngaicodegenerate.ai.AiCodeGeneratorServiceFactory;
+import com.youngheart.youngaicodegenerate.ai.message.AiResponseMessage;
+import com.youngheart.youngaicodegenerate.ai.message.ToolExecutedMessage;
+import com.youngheart.youngaicodegenerate.ai.message.ToolRequestMessage;
 import com.youngheart.youngaicodegenerate.ai.model.HtmlCodeResult;
 import com.youngheart.youngaicodegenerate.ai.model.MultiCodeResult;
 import com.youngheart.youngaicodegenerate.core.parser.CodeParserExecutor;
@@ -9,6 +13,9 @@ import com.youngheart.youngaicodegenerate.core.saver.CodeSaverExecutor;
 import com.youngheart.youngaicodegenerate.exception.BusinessException;
 import com.youngheart.youngaicodegenerate.exception.ErrorCode;
 import com.youngheart.youngaicodegenerate.model.enums.CodeGenTypeEnum;
+import dev.langchain4j.model.chat.response.ChatResponse;
+import dev.langchain4j.service.TokenStream;
+import dev.langchain4j.service.tool.ToolExecution;
 import jakarta.annotation.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -77,19 +84,8 @@ public class AiCodeGeneratorFacade {
     private Flux<String> generateAndSaveVueProjectCodeStream(String userMessage, Long appId) {
         // 根据 appId 获取对应的 AI 服务实例
         AiCodeGeneratorService aiCodeGeneratorService = aiCodeGeneratorServiceFactory.getAiCodeGeneratorService(appId, CodeGenTypeEnum.VUE_PROJECT);
-        Flux<String> result = aiCodeGeneratorService.generateVueProjectCodeStream(appId, userMessage);
-        StringBuilder stringBuilder = new StringBuilder();
-        return result.doOnNext(stringBuilder::append)
-                .doOnComplete(()->{
-                    try {
-                        String multiCode = stringBuilder.toString();
-                        Object multiCodeResult = CodeParserExecutor.executorParser(multiCode, CodeGenTypeEnum.MULTI_FILE);
-                        File file = CodeSaverExecutor.executorSaver(multiCodeResult, CodeGenTypeEnum.MULTI_FILE,appId);
-                        log.info("多文件代码流保存成功，目录：{}", file.getAbsolutePath());
-                    } catch (Exception e) {
-                        log.error("生成多文件代码流时出错:{}", e.getMessage());
-                    }
-                });
+        TokenStream tokenStream = aiCodeGeneratorService.generateVueProjectCodeStream(appId, userMessage);
+        return processTokenStream(tokenStream);
 
     }
 
@@ -128,6 +124,38 @@ public class AiCodeGeneratorFacade {
                     }
                 });
     }
+
+    /**
+     * 将 TokenStream 转换为 Flux<String>，并传递工具调用信息
+     *
+     * @param tokenStream TokenStream 对象
+     * @return Flux<String> 流式响应
+     */
+    private Flux<String> processTokenStream(TokenStream tokenStream) {
+        return Flux.create(sink -> {
+            tokenStream.onPartialResponse((String partialResponse) -> {
+                        AiResponseMessage aiResponseMessage = new AiResponseMessage(partialResponse);
+                        sink.next(JSONUtil.toJsonStr(aiResponseMessage));
+                    })
+                    .onPartialToolExecutionRequest((index, toolExecutionRequest) -> {
+                        ToolRequestMessage toolRequestMessage = new ToolRequestMessage(toolExecutionRequest);
+                        sink.next(JSONUtil.toJsonStr(toolRequestMessage));
+                    })
+                    .onToolExecuted((ToolExecution toolExecution) -> {
+                        ToolExecutedMessage toolExecutedMessage = new ToolExecutedMessage(toolExecution);
+                        sink.next(JSONUtil.toJsonStr(toolExecutedMessage));
+                    })
+                    .onCompleteResponse((ChatResponse response) -> {
+                        sink.complete();
+                    })
+                    .onError((Throwable error) -> {
+                        error.printStackTrace();
+                        sink.error(error);
+                    })
+                    .start();
+        });
+    }
+
 
     /**
      * 生成 HTML 模式的代码并保存
